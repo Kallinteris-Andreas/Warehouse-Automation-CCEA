@@ -1,6 +1,6 @@
-#include "WarehouseCentralisedAverageTime.h"
+#include "WarehouseLinksAverageTime.h"
 
-WarehouseCentralisedAverageTime::~WarehouseCentralisedAverageTime(void){
+WarehouseLinksAverageTime::~WarehouseLinksAverageTime(){
   delete whGraph ;
   whGraph = 0 ;
   for (size_t i = 0; i < whAGVs.size(); i++){
@@ -24,7 +24,7 @@ WarehouseCentralisedAverageTime::~WarehouseCentralisedAverageTime(void){
   }
 }
 
-void WarehouseCentralisedAverageTime::SimulateEpoch(bool train){
+void WarehouseLinksAverageTime::SimulateEpoch(bool train){
   size_t teamSize ;
   if (train)
     teamSize = 2*nPop ;
@@ -76,6 +76,7 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(bool train){
       UpdateGraphCosts(a) ;
       
       // Replan AGVs as necessary
+      vector<size_t> toEnter ; // keep track of AGVs waiting to enter (these need to be removed from waitlists regardless of whether or not they enter the graph since replanning can cause a change in agent membership)
       for (size_t k = 0; k < nAGVs; k++){
         whAGVs[k]->CompareCosts(a) ; // set replanning flags
       
@@ -85,7 +86,14 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(bool train){
         
         // Identify any new AGVs that need to cross an intersection
         if (whAGVs[k]->GetT2V() == 0){
-          size_t agentID = 0 ; // only one agent
+          size_t agentID ;
+          if (whAGVs[k]->GetNextVertex() < 0){ // AGV waiting to enter graph
+            agentID = whGraph->GetEdgeID(whAGVs[k]->GetNextEdge()) ;
+            toEnter.push_back(k) ;
+          }
+          else{ // AGV enroute
+            agentID = whGraph->GetEdgeID(whAGVs[k]->GetCurEdge()) ;
+          }
           bool onWaitList = false ;
           for (list<size_t>::iterator it = whAgents[agentID]->agvIDs.begin(); it!=whAgents[agentID]->agvIDs.end(); ++it){
             if (k == *it){
@@ -101,7 +109,7 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(bool train){
       
       // Attempt to move any transitioning AGVs on to new edges (according to wait list order)
       for (size_t k = 0; k < nAgents; k++){
-        vector<size_t> toRemove ;
+        vector<size_t> toRemove = toEnter ;
         for (list<size_t>::iterator it = whAgents[k]->agvIDs.begin(); it!=whAgents[k]->agvIDs.end(); ++it){
           size_t curAGV = *it ;
           size_t nextID = whGraph->GetEdgeID(whAGVs[curAGV]->GetNextEdge()) ; // next edge ID
@@ -111,8 +119,10 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(bool train){
             std::cout << "AGV #" << curAGV << ", nextID: " << nextID << "\n" ;
             std::cout << "  t2v: " << whAGVs[curAGV]->GetT2V() << "\n" ;
             std::cout << "  itsQueue: " << (whAGVs[curAGV]->GetAGVPlanner()->GetQueue() != 0) << "\n" ;
+            std::cout << "  itsNextEdge: (" << whAGVs[curAGV]->GetNextEdge() << ")\n" ;
+            edgeFull = true ;
           }
-          if (s[nextID] >= capacities[nextID]){ // check if next edge is full
+          else if (s[nextID] >= capacities[nextID]){ // check if next edge is full
             edgeFull = true ;
           }
           if (!edgeFull){ // transfer to new edge and update agv counters
@@ -200,7 +210,7 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(bool train){
   }
   
   // Print out best team for this learning epoch
-  std::cout << "Best policy: #" << maxTeamID << ", G: " << maxEval << "\n" ;
+  std::cout << "Best team: #" << maxTeamID << ", G: " << maxEval << "\n" ;
   
   if (outputEvals){
     evalFile << maxTeamID << "," ;
@@ -215,7 +225,7 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(bool train){
   }
 }
 
-void WarehouseCentralisedAverageTime::SimulateEpoch(vector<size_t> memberIDs){
+void WarehouseLinksAverageTime::SimulateEpoch(vector<size_t> memberIDs){
   double maxEval = 0.0 ;
   vector<size_t> travelStats ;
   
@@ -251,6 +261,7 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(vector<size_t> memberIDs){
     UpdateGraphCosts(a) ;
     
     // Replan AGVs as necessary
+    vector<size_t> toEnter ; // keep track of AGVs waiting to enter (these need to be removed from waitlists regardless of whether or not they enter the graph since replanning can cause a change in agent membership)
     for (size_t k = 0; k < nAGVs; k++){
       whAGVs[k]->CompareCosts(a) ; // set replanning flags
     
@@ -260,7 +271,14 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(vector<size_t> memberIDs){
       
       // Identify any new AGVs that need to cross an intersection
       if (whAGVs[k]->GetT2V() == 0){
-        size_t agentID = 0 ; // only one agent
+        size_t agentID ;
+        if (whAGVs[k]->GetNextVertex() < 0){ // AGV waiting to enter graph
+          agentID = whGraph->GetEdgeID(whAGVs[k]->GetNextEdge()) ;
+          toEnter.push_back(k) ;
+        }
+        else{ // AGV enroute
+          agentID = whGraph->GetEdgeID(whAGVs[k]->GetCurEdge()) ;
+        }
         bool onWaitList = false ;
         for (list<size_t>::iterator it = whAgents[agentID]->agvIDs.begin(); it!=whAgents[agentID]->agvIDs.end(); ++it){
           if (k == *it){
@@ -276,7 +294,7 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(vector<size_t> memberIDs){
     
     // Attempt to move any transitioning AGVs on to new edges (according to wait list order)
     for (size_t k = 0; k < nAgents; k++){
-      vector<size_t> toRemove ;
+      vector<size_t> toRemove = toEnter ;
       for (list<size_t>::iterator it = whAgents[k]->agvIDs.begin(); it!=whAgents[k]->agvIDs.end(); ++it){
         size_t curAGV = *it ;
         size_t nextID = whGraph->GetEdgeID(whAGVs[curAGV]->GetNextEdge()) ; // next edge ID
@@ -286,8 +304,10 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(vector<size_t> memberIDs){
           std::cout << "AGV #" << curAGV << ", nextID: " << nextID << "\n" ;
           std::cout << "  t2v: " << whAGVs[curAGV]->GetT2V() << "\n" ;
           std::cout << "  itsQueue: " << (whAGVs[curAGV]->GetAGVPlanner()->GetQueue() != 0) << "\n" ;
+          std::cout << "  itsNextEdge: (" << whAGVs[curAGV]->GetNextEdge() << ")\n" ;
+          edgeFull = true ;
         }
-        if (s[nextID] >= capacities[nextID]){ // check if next edge is full
+        else if (s[nextID] >= capacities[nextID]){ // check if next edge is full
           edgeFull = true ;
         }
         if (!edgeFull){ // transfer to new edge and update agv counters
@@ -377,37 +397,35 @@ void WarehouseCentralisedAverageTime::SimulateEpoch(vector<size_t> memberIDs){
   }
 }
 
-void WarehouseCentralisedAverageTime::InitialiseMATeam(){
-  // Initialise NE component and domain housekeeping components of the centralised agent
+void WarehouseLinksAverageTime::InitialiseMATeam(){
+  // Initialise NE components and domain housekeeping components of the link agents
+  vector<int> v = whGraph->GetVertices() ;
   vector<Edge *> e = whGraph->GetEdges() ;
-  vector<size_t> eIDs ;
-  for (size_t j = 0; j < e.size(); j++){
-    eIDs.push_back(j) ;
+  for (size_t i = 0; i < e.size(); i++){
+    vector<size_t> vIDs ;
+    vIDs.push_back(e[i]->GetVertex1()) ;
+    vIDs.push_back(e[i]->GetVertex2()) ;
+    iAgent * agent = new iAgent{i, vIDs} ;
+    size_t nOut = 1 ;
+    size_t nIn = 2 ;
+    size_t nHid = 16 ;
+    Agent * neAgent ;
+    neAgent = new Link(nPop, nIn, nOut, nHid) ;
+    whAgents.push_back(agent) ;
+    maTeam.push_back(neAgent) ;
   }
-  iAgent * agent = new iAgent{0, eIDs} ; // only one centralised agent controlling all traffic
-  whAgents.push_back(agent) ;
-  
-  size_t nOut = eIDs.size() ; // NN output is additional cost applied to each edge
-  size_t nIn = nOut*2 ; // NN input is current #AGVs on all edges and average time to arrival at next intersection
-//  size_t nHid = 16 ; // fixed to compare against link agent formulation
-  size_t nHid = 2*nIn ; // control for relative representational capacity
-  Agent * neAgent ;
-  neAgent = new Intersection(nPop, nIn, nOut, nHid) ;// only one centralised agent
-  maTeam.push_back(neAgent) ;
   nAgents = whAgents.size() ;
 }
 
-void WarehouseCentralisedAverageTime::QueryMATeam(vector<size_t> memberIDs, vector<double> &a, vector<size_t> &s){
+void WarehouseLinksAverageTime::QueryMATeam(vector<size_t> memberIDs, vector<double> &a, vector<size_t> &s){
   vector<Edge *> e = whGraph->GetEdges() ;
   vector<double> eTime = baseCosts ;
   GetJointState(e, s, eTime) ;
   
   for (size_t i = 0; i < nAgents; i++){
-    VectorXd input(whAgents[i]->eIDs.size()*2) ;
-    for (size_t j = 0; j < whAgents[i]->eIDs.size(); j++){
-      input(2*j) = s[whAgents[i]->eIDs[j]] ;
-      input(2*j+1) = eTime[whAgents[i]->eIDs[j]] ;
-    }
+    VectorXd input(2) ;
+    input(0) = s[whAgents[i]->vID] ;
+    input(1) = eTime[whAgents[i]->vID] ;
     VectorXd output = maTeam[i]->ExecuteNNControlPolicy(memberIDs[i], input) ;
     
     double maxBaseCost ;
@@ -417,33 +435,19 @@ void WarehouseCentralisedAverageTime::QueryMATeam(vector<size_t> memberIDs, vect
     else{
       maxBaseCost = 0.0 ;
     }
-    for (size_t j = 0; j < (size_t)output.size(); j++){ // output [0,1] scaled to max base cost
-      a[whAgents[i]->eIDs[j]] += output(j)*maxBaseCost ;
-    }
+    a[whAgents[i]->vID] += output(0)*maxBaseCost ;
   }
 }
 
-void WarehouseCentralisedAverageTime::GetJointState(vector<Edge *> e, vector<size_t> &s, vector<double> &eTime){
-  assert(eTime.size() == whGraph->GetEdges().size());
-  std::vector<double> total_time(whGraph->GetEdges().size(), 0);
-
+void WarehouseLinksAverageTime::GetJointState(vector<Edge *> e, vector<size_t> &s, vector<double> &eTime){
   for (size_t i = 0; i < nAGVs; i++){
     Edge * curEdge = whAGVs[i]->GetCurEdge() ;
     size_t j = whGraph->GetEdgeID(curEdge) ;
     if (j < s.size()){
       s[j]++ ;
-    total_time[j] += whAGVs[i]->GetT2V();
-      //if (eTime[j] > whAGVs[i]->GetT2V()){ // update next time of arrival
-        //eTime[j] = whAGVs[i]->GetT2V() ;
-      //}
+      if (eTime[j] > whAGVs[i]->GetT2V()){ // update next time of arrival
+        eTime[j] = whAGVs[i]->GetT2V() ;
+      }
     }
   }
-
-  //put eTime values the average time needed to complete the traversal
-  for (auto i : std::views::iota(0, eTime.size()))
-  //for (auto i : std::views::iota(0, 5))
-    if (s[i] != 0)
-      eTime[i] = total_time[i] / static_cast<double>(s[i]);
-    else
-	assert(eTime[i] == baseCosts[i]);
 }
