@@ -13,15 +13,8 @@ sudo apt install libboost-dev libeigen3-dev libyaml-cpp-dev
 
 In the working folder of your choice, clone the project code:
 ```
-git clone https://github.com/JenJenChung/multiagent_learning.git
+git clone https://github.com/Kallinteris-Andreas/Warehouse-Automation-CCEA.git
 ```
-
-Clone internal dependencies:
-```
-cd multiagent_learning
-git clone https://github.com/JenJenChung/include.git
-```
-
 Build the code:
 ```
 cd build
