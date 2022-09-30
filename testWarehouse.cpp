@@ -11,6 +11,7 @@
 #include "Domains/WarehouseIntersections.h"
 #include "Domains/WarehouseLinksTime.h"
 #include "Domains/WarehouseLinks.h"
+#include "Domains/WarehouseCentralisedAverageTime.h"
 #include "Domains/WarehouseCentralisedTime.h"
 #include "Domains/WarehouseCentralised.h"
 #include "threadpool.hpp"
@@ -44,6 +45,8 @@ void WarehouseSimulationSingleRun(int r, YAML::Node configs){
   else if (agentType.compare("centralised") == 0){
     trainDomain = new WarehouseCentralised(configs) ;
   }
+  else if (agentType.compare("centralised_avgt") == 0)
+    trainDomain = new WarehouseCentralisedAverageTime(configs) ;
   else{
     std::cout << "ERROR: Currently only configured for 'intersection', 'link' or 'centralised' agents! Exiting.\n" ;
     exit(1) ;
