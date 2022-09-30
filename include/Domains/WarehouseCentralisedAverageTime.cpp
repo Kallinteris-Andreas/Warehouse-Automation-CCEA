@@ -440,8 +440,8 @@ void WarehouseCentralisedAverageTime::GetJointState(vector<Edge *> e, vector<siz
   }
 
   //put eTime values the average time needed to complete the traversal
-  for (auto i : std::views::iota(0, eTime.size()))
-  //for (auto i : std::views::iota(0, 5))
+  //for (auto i : std::views::iota(0, static_cast<ulong>(eTime.size())))
+  for (auto i = 0; i != eTime.size(); i++)
     if (s[i] != 0)
       eTime[i] = total_time[i] / static_cast<double>(s[i]);
     else
