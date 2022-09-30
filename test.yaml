@@ -5,7 +5,8 @@ mode:
   eval_file: ../Domains/Small_120_AGVs_SS_link_time/Results/evaluation_29.csv # file containing best teams
 domain:
   folder: ../Domains/Small_120_AGVs_SS_link_time/
-  agents: link_t
+  agents: centralised_avgt #Valid Opt: 'centralised', 'centralised_t','centralised_avgt', 'link', 'link_t', 'link_avgt', 'intersection', 'intersection_t','intersection_avgt'
+  #agents: centralised_t #Valid Opt: 'centralised', 'centralised_t','centralised_avgt', 'link', 'link_t', 'link_avgt', 'intersection', 'intersection_t','intersection_avgt'
 graph:
   vertices: vertices.csv
   edges: edges.csv

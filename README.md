@@ -26,6 +26,6 @@ make
 
 Run the project configured by `config.yaml` using six threads:
 ```
-./testWarehouse -c ./config.yaml -t 6
+./testWarehouse -c ../config.yaml -t 6
 ```
 Consult the documentation (Multiagent_neuro_evolution_for_learning_traffic_management_policies.pdf) for details about configuration file options.
