@@ -431,7 +431,7 @@ void WarehouseCentralisedAverageTime::GetJointState(vector<Edge *> e, vector<siz
     Edge* curEdge = whAGVs[i]->GetCurEdge() ;
     size_t j = whGraph->GetEdgeID(curEdge) ;
     if (j < s.size()){
-      s[j]+ ;
+      s[j]++;
       total_time[j] += whAGVs[i]->GetT2V();
     }
   }
