@@ -406,11 +406,11 @@ void WarehouseCentralisedBothTime::QueryMATeam(vector<size_t> memberIDs, vector<
   GetJointState(e, s, eTime) ;
   
   for (size_t i = 0; i < nAgents; i++){
-    VectorXd input(whAgents[i]->eIDs.size()*2) ;
+    VectorXd input(whAgents[i]->eIDs.size()*3) ;
     for (size_t j = 0; j < whAgents[i]->eIDs.size(); j++){
       input(3*j) = s[whAgents[i]->eIDs[j]] ;
       input(3*j+1) = eTime[whAgents[i]->eIDs[j]] ;
-      input(3*j+2) = eTime[whAgents[i]->eIDs[j + e.size()]] ;
+      input(3*j+2) = eTime[whAgents[i]->eIDs[j] + e.size()] ;
     }
     VectorXd output = maTeam[i]->ExecuteNNControlPolicy(memberIDs[i], input) ;
     
@@ -429,6 +429,7 @@ void WarehouseCentralisedBothTime::QueryMATeam(vector<size_t> memberIDs, vector<
 
 void WarehouseCentralisedBothTime::GetJointState(vector<Edge *> e, vector<size_t> &s, vector<double> &eTime){
   assert(eTime.size() == whGraph->GetEdges().size() * 2);
+  assert(e.size() == whGraph->GetEdges().size());
   std::vector<double> total_time(whGraph->GetEdges().size(), 0);
 
   for (size_t i = 0; i < nAGVs; i++){
@@ -443,9 +444,10 @@ void WarehouseCentralisedBothTime::GetJointState(vector<Edge *> e, vector<size_t
   }
 
   //put eTime values the average time needed to complete the traversal
-  for (auto i = 0; i != eTime.size(); i++)
+  for (auto i = 0; i != e.size(); i++)
     if (s[i] != 0)
-      eTime[i + eTime.size()] = total_time[i] / static_cast<double>(s[i]);
+      eTime[i + e.size()] = total_time[i] / static_cast<double>(s[i]);
     else
-      assert(eTime[i] == baseCosts[i]);
+      assert(eTime[i + e.size()] == baseCosts[i]);
+  //etime should cointain [{last_time_remaining}, {average_time_remaining}]
 }
