@@ -9,11 +9,11 @@
 #include "Domains/Warehouse.h"
 #include "Domains/WarehouseIntersectionsAverageTime.h"
 #include "Domains/WarehouseIntersectionsTime.h"
-//#include "Domains/WarehouseIntersectionsBothTime.h"
+#include "Domains/WarehouseIntersectionsBothTime.h"
 #include "Domains/WarehouseIntersections.h"
 #include "Domains/WarehouseLinksAverageTime.h"
 #include "Domains/WarehouseLinksTime.h"
-//#include "Domains/WarehouseLinksBothTime.h"
+#include "Domains/WarehouseLinksBothTime.h"
 #include "Domains/WarehouseLinks.h"
 #include "Domains/WarehouseCentralisedAverageTime.h"
 #include "Domains/WarehouseCentralisedTime.h"
@@ -59,9 +59,9 @@ void WarehouseSimulationSingleRun(int r, YAML::Node configs){
   else if (agentType.compare("centralised_botht") == 0)
     trainDomain = new WarehouseCentralisedBothTime(configs) ;
   else if (agentType.compare("link_botht") == 0)
-    ;//trainDomain = new WarehouseLinksBothTime(configs) ;
+    trainDomain = new WarehouseLinksBothTime(configs) ;
   else if (agentType.compare("intersection_botht") == 0)
-    ;//trainDomain = new WarehouseIntersectionsBothTime(configs) ;
+    trainDomain = new WarehouseIntersectionsBothTime(configs) ;
   else{
     std::cout << "ERROR: Currently only configured for 'intersection', 'link' or 'centralised' agents! Exiting.\n" ;
     exit(1) ;
