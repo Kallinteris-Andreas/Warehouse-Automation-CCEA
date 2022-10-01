@@ -432,15 +432,11 @@ void WarehouseCentralisedAverageTime::GetJointState(vector<Edge *> e, vector<siz
     size_t j = whGraph->GetEdgeID(curEdge) ;
     if (j < s.size()){
       s[j]++ ;
-    total_time[j] += whAGVs[i]->GetT2V();
-      //if (eTime[j] > whAGVs[i]->GetT2V()){ // update next time of arrival
-        //eTime[j] = whAGVs[i]->GetT2V() ;
-      //}
+      total_time[j] += whAGVs[i]->GetT2V();
     }
   }
 
   //put eTime values the average time needed to complete the traversal
-  //for (auto i : std::views::iota(0, static_cast<ulong>(eTime.size())))
   for (auto i = 0; i != eTime.size(); i++)
     if (s[i] != 0)
       eTime[i] = total_time[i] / static_cast<double>(s[i]);
