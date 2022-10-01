@@ -428,10 +428,10 @@ void WarehouseCentralisedAverageTime::GetJointState(vector<Edge *> e, vector<siz
   std::vector<double> total_time(whGraph->GetEdges().size(), 0);
 
   for (size_t i = 0; i < nAGVs; i++){
-    Edge * curEdge = whAGVs[i]->GetCurEdge() ;
+    Edge* curEdge = whAGVs[i]->GetCurEdge() ;
     size_t j = whGraph->GetEdgeID(curEdge) ;
     if (j < s.size()){
-      s[j]++ ;
+      s[j]+ ;
       total_time[j] += whAGVs[i]->GetT2V();
     }
   }
@@ -441,5 +441,5 @@ void WarehouseCentralisedAverageTime::GetJointState(vector<Edge *> e, vector<siz
     if (s[i] != 0)
       eTime[i] = total_time[i] / static_cast<double>(s[i]);
     else
-	assert(eTime[i] == baseCosts[i]);
+      assert(eTime[i] == baseCosts[i]);
 }
