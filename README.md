@@ -1,6 +1,13 @@
 # multiagent_learning
 
-Top level project files for multiagent learning.
+Fork includes 6 new agents definitions:
+ - Centralized with avg time
+ - Intersection with avg time
+ - Link with avg time
+ - Centralized with both time
+ - Intersection with both time
+ - Link with both time
+
 
 ## Installation ##
 
